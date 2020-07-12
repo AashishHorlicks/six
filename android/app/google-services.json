@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "532392590892",
+    "firebase_url": "https://fifth-run.firebaseio.com",
+    "project_id": "fifth-run",
+    "storage_bucket": "fifth-run.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:532392590892:android:4d8ec93a5054e618ee9b89",
+        "android_client_info": {
+          "package_name": "com.example.five_test_pointer"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "532392590892-kjmcl9s56kll2n3ufdh32e57d79pha7r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDw12SsdpUhnXWKHoE2tR7JGMsPppYnzXY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "532392590892-kjmcl9s56kll2n3ufdh32e57d79pha7r.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
