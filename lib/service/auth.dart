@@ -1,3 +1,5 @@
+import 'package:five_test_pointer/utils/app_constants.dart';
+import 'package:five_test_pointer/utils/preference_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
@@ -41,10 +43,13 @@ class _AuthScreenState extends State<AuthScreen> {
             .collection('users')
             .document(authResult.user.uid)
             .setData({
+          'uid': authResult.user.uid,
           'username': username,
           'email': email,
+          'isPaidForTest': false
         });
       }
+      PreferenceManager.putBool(AppConstants.isLoggedIn, true);
     } on PlatformException catch (err) {
       var message = 'An error occurred, pelase check your credentials!';
 

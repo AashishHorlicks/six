@@ -1,15 +1,19 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:five_test_pointer/Freetype/page_view.dart';
 import 'package:five_test_pointer/OtherField/register.dart';
+import 'package:five_test_pointer/models/model_user.dart';
+import 'package:five_test_pointer/utils/dialog/z_imports_dialog.dart';
+import 'package:five_test_pointer/utils/firebase/firebase_service.dart';
+import 'package:five_test_pointer/utils/preference_manager.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:flutter/material.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:toast/toast.dart';
 import '../profile/profile.dart';
-
 
 class CustomDrawer extends StatefulWidget {
   final Widget child;
-  
 
   const CustomDrawer({Key key, @required this.child}) : super(key: key);
 
@@ -28,6 +32,8 @@ class CustomDrawerState extends State<CustomDrawer>
   static const double maxDragStartEdge = maxSlide - 16;
   AnimationController _animationController;
   bool _canBeDragged = false;
+
+  //TextEditingController textEditingController = new TextEditingController();
 
   @override
   void initState() {
@@ -128,9 +134,50 @@ class CustomDrawerState extends State<CustomDrawer>
   }
 }
 
+class MyDrawer extends StatefulWidget {
+  @override
+  _MyDrawerState createState() => _MyDrawerState();
+}
 
-class MyDrawer extends StatelessWidget {
+class _MyDrawerState extends State<MyDrawer> {
   String userId;
+  Razorpay razorpay;
+  @override
+  void initState() {
+    super.initState();
+
+    razorpay = new Razorpay();
+    razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, handlePaymentSuccess);
+    razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, handlePaymentError);
+    razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, handleExternalWallet);
+  }
+
+  void handlePaymentSuccess(PaymentSuccessResponse response) async {
+    FirebaseUser user = await getCurrentFirebaseUser();
+    DatabaseService<User> userDB = DatabaseService<User>("users",
+        fromDS: (id, data) => User.fromJson(data),
+        toMap: (user) => user.toJson());
+
+    await userDB.updateData(user.uid, {"isPaidForTest": true});
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => MockTest()),
+    );
+  }
+
+  void handlePaymentError(PaymentFailureResponse response) {
+    Toast.show("Failed to complete payment", context, duration: 2);
+  }
+
+  void handleExternalWallet(ExternalWalletResponse response) {}
+
+  @override
+  void dispose() {
+    super.dispose();
+    razorpay.clear();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -149,58 +196,88 @@ class MyDrawer extends StatelessWidget {
               //   height: 200,
               // ),
               InkWell(
-                onTap: (){
-                   Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => Profile()),
-          );
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => Profile()),
+                  );
                 },
-                              child: ListTile(
+                child: ListTile(
                   leading: Icon(Icons.person),
                   title: Text('Profile'),
                 ),
               ),
               InkWell(
-                onTap: (){
-                   Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => MockTest()),
-          );
+                onTap: () async {
+                  FirebaseUser user = await getCurrentFirebaseUser();
+
+                  DatabaseService<User> userDB = DatabaseService<User>("users",
+                      fromDS: (id, data) => User.fromJson(data),
+                      toMap: (user) => user.toJson());
+
+                  User userMain = await userDB.getSingle(user.uid);
+
+                  if (userMain.isPaidForTest) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => MockTest()),
+                    );
+                  } else {
+                    DialogHelper().showConfirm(context, "",
+                        "You need to pay 999 Rs before accessing TEST.", () {
+                      openCheckout();
+                    }, "PAY");
+                  }
                 },
-                              child: ListTile(
+                child: ListTile(
                   leading: Icon(Icons.new_releases),
                   title: Text('crunch'),
                 ),
               ),
               InkWell(
-                onTap: (){
-                   Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => MockTest()),
-          );
+                onTap: () async{
+                  FirebaseUser user = await getCurrentFirebaseUser();
+
+                  DatabaseService<User> userDB = DatabaseService<User>("users",
+                      fromDS: (id, data) => User.fromJson(data),
+                      toMap: (user) => user.toJson());
+
+                  User userMain = await userDB.getSingle(user.uid);
+
+                  if (userMain.isPaidForTest) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => MockTest()),
+                    );
+                  } else {
+                    DialogHelper().showConfirm(context, "",
+                        "You need to pay 999 Rs before accessing TEST.", () {
+                          openCheckout();
+                        }, "PAY");
+                  }
                 },
-                              child: ListTile(
+                child: ListTile(
                   leading: Icon(Icons.move_to_inbox),
                   title: Text('Mock Test'),
                 ),
               ),
               InkWell(
-                onTap: (){
-                   Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => Payment()),
-          );
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => Payment()),
+                  );
                 },
-                              child: ListTile(
+                child: ListTile(
                   leading: Icon(Icons.settings),
                   title: Text('Pay'),
                 ),
               ),
               InkWell(
-                onTap: (){
+                onTap: () {
                   FirebaseAuth.instance.signOut();
                 },
-                              child: ListTile(
+                child: ListTile(
                   leading: Icon(Icons.exit_to_app),
                   title: Text('Logout'),
                 ),
@@ -210,5 +287,35 @@ class MyDrawer extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void openCheckout() async {
+    FirebaseUser user = await getCurrentFirebaseUser();
+
+    var options = {
+      "key": "rzp_test_4Tq0aHyP3wJB5t",
+      "amount": 99900,
+      "name": user.displayName,
+      "description": "add details",
+      "prefill": {"contact": "91+", "email": user.email},
+      "external": {
+        "wallet": ["paytm"]
+      }
+    };
+    try {
+      razorpay.open(options);
+    } catch (e) {
+      print(e.toString());
+    }
+  }
+
+  Future<FirebaseUser> getCurrentFirebaseUser() async {
+    FirebaseUser currentUser = await FirebaseAuth.instance.currentUser();
+    return currentUser;
+  }
+
+  Future<void> signOut() async {
+    await PreferenceManager.clear();
+    FirebaseAuth.instance.signOut();
   }
 }

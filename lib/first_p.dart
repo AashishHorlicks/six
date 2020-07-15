@@ -4,21 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 
-
 import './service/auth.dart';
 import 'home.dart';
 
-
-
-
-class SplashScreen extends StatefulWidget {
-  SplashScreen({Key key}) : super(key: key);
+class OnBoardingScreen extends StatefulWidget {
+  OnBoardingScreen({Key key}) : super(key: key);
 
   @override
-  _SplashScreenState createState() => _SplashScreenState();
+  _OnBoardingScreenState createState() => _OnBoardingScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _OnBoardingScreenState extends State<OnBoardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,21 +47,21 @@ class _SplashScreenState extends State<SplashScreen> {
                   ),
                 ),
               ),
-              SizedBox(height:10),
+              SizedBox(height: 10),
               RaisedButton(
-                onPressed: (){
+                onPressed: () {
                   FirebaseAuth.instance
-                  .signInAnonymously()
-                  .then((FirebaseUser){
-                     Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => HomePage()),
-          );
-                  }).catchError((e){
+                      .signInAnonymously()
+                      .then((FirebaseUser) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => HomePage()),
+                    );
+                  }).catchError((e) {
                     print(e);
                   });
                 },
-                ),
+              ),
               RaisedButton(
                 elevation: 10,
                 shape: RoundedRectangleBorder(
@@ -73,16 +69,19 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
                 color: Colors.redAccent,
                 onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(
-          builder: (context) => StreamBuilder(stream: FirebaseAuth.instance.onAuthStateChanged, builder: (ctx, userSnapshot) {
-        if (userSnapshot.hasData) {
-          return HomePage();
-        }else {
-          return AuthScreen();
-          }
-        
-      }),
-          ));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => StreamBuilder(
+                            stream: FirebaseAuth.instance.onAuthStateChanged,
+                            builder: (ctx, userSnapshot) {
+                              if (userSnapshot.hasData) {
+                                return HomePage();
+                              } else {
+                                return AuthScreen();
+                              }
+                            }),
+                      ));
                 },
                 child: Text(
                   'Get Started',
@@ -94,7 +93,6 @@ class _SplashScreenState extends State<SplashScreen> {
                   ),
                 ),
               ),
-             
             ],
           ),
         ),
